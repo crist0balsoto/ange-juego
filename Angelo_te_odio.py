@@ -4,20 +4,23 @@ import random
 
 # Función para reiniciar el juego
 def reset_game():
-    global hits, player_rect, bullets, enemies, items, start_time, game_over
+    global hits, player_rect, bullets, enemies, items, start_time, game_over, enemy_speed, last_speed_increase_time
     hits = 0
     player_rect.topleft = (width // 2 - player_rect.width // 2, height - player_rect.height - 10)
     bullets.clear()
     enemies.clear()
     items.clear()
     start_time = pygame.time.get_ticks()
+    last_speed_increase_time = start_time
+    enemy_speed = 5
     game_over = False
 
 # Función para aumentar el tamaño de los disparos
 def increase_bullet_size():
-    global bullet_image, bullet_rect
+    global bullet_image, bullet_rect, bullet_speed
     bullet_image = pygame.transform.scale(bullet_image, (bullet_rect.width + 5, bullet_rect.height + 5))
     bullet_rect = bullet_image.get_rect()
+    bullet_speed += 2  # Incrementa la velocidad de las balas
 
 # Función para generar enemigos
 def generate_enemies():
@@ -28,7 +31,7 @@ def generate_enemies():
 
 # Función para generar items
 def generate_items():
-    if random.randint(0, 100) < 2:
+    if random.randint(0, 100) < 1:  # Reducir la tasa de aparición de los ítems "Yasuo"
         item_rect = item_image.get_rect()
         item_rect.x = random.randint(0, width - item_rect.width)
         items.append(item_rect.copy())
@@ -84,6 +87,8 @@ keys_pressed = {'left': False, 'right': False}
 
 # Tiempo transcurrido
 start_time = pygame.time.get_ticks()
+last_speed_increase_time = start_time
+enemy_speed_increase_interval = 15000  # 15 segundos
 
 # Contador de golpes
 hits = 0
@@ -163,6 +168,12 @@ while not game_over:
     for enemy in enemies:
         if player_rect.colliderect(enemy):
             game_over = True
+
+    # Aumentar la velocidad de los enemigos si ha pasado suficiente tiempo
+    current_time = pygame.time.get_ticks()
+    if current_time - last_speed_increase_time > enemy_speed_increase_interval:
+        last_speed_increase_time = current_time
+        enemy_speed += 3  # Aumentar la velocidad de los enemigos
 
     # Limpiar la pantalla con el fondo
     screen.blit(background_image, (0, 0))
