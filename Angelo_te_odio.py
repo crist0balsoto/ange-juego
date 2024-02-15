@@ -18,23 +18,37 @@ def reset_game():
 # Función para aumentar el tamaño de los disparos
 def increase_bullet_size():
     global bullet_image, bullet_rect, bullet_speed
-    bullet_image = pygame.transform.scale(bullet_image, (bullet_rect.width + 5, bullet_rect.height + 5))
+    bullet_image = pygame.transform.scale(bullet_image, (bullet_rect.width + 2, bullet_rect.height + 2))
     bullet_rect = bullet_image.get_rect()
+
+def increase_bullet_speed():
+    global bullet_speed
     bullet_speed += 2  # Incrementa la velocidad de las balas
 
 # Función para generar enemigos
 def generate_enemies():
-    if random.randint(0, 100) < 5:
+    if random.randint(0, 100) < 1:
         enemy_rect = enemy_image.get_rect()
         enemy_rect.x = random.randint(0, width - enemy_rect.width)
         enemies.append(enemy_rect.copy())
 
 # Función para generar items
 def generate_items():
-    if random.randint(0, 100) < 1:  # Reducir la tasa de aparición de los ítems "Yasuo"
+    if random.randint(0, 100) < 0.1:  # Reducir la tasa de aparición de los ítems "Yasuo"
         item_rect = item_image.get_rect()
         item_rect.x = random.randint(0, width - item_rect.width)
         items.append(item_rect.copy())
+    elif random.randint(0, 100) < 0.1:  # Asegurarse de que el item "Redbull" se genera
+        item_rect2 = item_image2.get_rect()
+        item_rect2.x = random.randint(0, width - item_rect2.width)
+        items2.append(item_rect2.copy())
+
+def generate_obstacles():
+    if random.randint(0, 100) < 1:  # Ajusta la tasa de aparición de los obstáculos
+        obstacle_rect = obstacle_image.get_rect()
+        obstacle_rect.x = random.randint(0, width - obstacle_rect.width)
+        obstacles.append(obstacle_rect.copy())
+
 
 # Inicializar Pygame
 pygame.init()
@@ -59,7 +73,11 @@ item_image = pygame.image.load("imgs/yasuo.png")
 item_image = pygame.transform.scale(item_image, (40, 40))
 item_rect = item_image.get_rect()
 
-background_image = pygame.image.load("imgs/fondo_amor.jpg")
+item_image2 = pygame.image.load("imgs/redbull.png")
+item_image2 = pygame.transform.scale(item_image2, (40, 40))
+item_rect2 = item_image.get_rect()
+
+background_image = pygame.image.load("imgs/atacama2.jpg")
 background_image = pygame.transform.scale(background_image, (width, height))
 
 # Jugador
@@ -67,17 +85,29 @@ player_rect = player_image.get_rect()
 player_rect.topleft = (width // 2 - player_rect.width // 2, height - player_rect.height - 10)
 player_speed = 15
 
+# Cargar la imagen del obstáculo
+obstacle_image = pygame.image.load('imgs/amonus.png')
+obstacle_image = pygame.transform.scale(obstacle_image, (40, 40))
+# Velocidad del obstáculo
+obstacle_speed = 1
+
+# Lista de obstáculos
+obstacles = []
 # Bala
-bullet_speed = 10
+bullet_speed = 5
 bullets = []
 
 # Enemigo
-enemy_speed = 5
+enemy_speed = 2
 enemies = []
 
 # Item
-item_speed = 5
+item_speed = 9
 items = []
+
+# Item 2
+item_speed2 = 9
+items2 = []
 
 # Reloj
 clock = pygame.time.Clock()
@@ -125,8 +155,14 @@ while not game_over:
                 bullets.append(bullet)
                 
                 # Verificar si hay un item en la pantalla y el jugador ha disparado
-                if any(item_rect.colliderect(player_rect) for item_rect in items):
-                    increase_bullet_size()
+                for item_rect in items.copy():
+                    if item_rect.colliderect(player_rect):
+                        increase_bullet_size()
+                        items.remove(item_rect)
+                for item_rect2 in items2.copy():
+                    if item_rect2.colliderect(player_rect):
+                        increase_bullet_speed()
+                        items2.remove(item_rect2)
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
@@ -147,6 +183,7 @@ while not game_over:
     # Generar enemigos y items
     generate_enemies()
     generate_items()
+    generate_obstacles()
 
     # Actualizar posición de los enemigos
     for enemy in enemies:
@@ -155,6 +192,13 @@ while not game_over:
     # Actualizar posición de los items
     for item in items:
         item.y += item_speed
+
+    for item in items2:
+        item.y += item_speed2
+
+    # Actualizar posición de los obstáculos
+    for obstacle in obstacles:
+        obstacle.y += obstacle_speed
 
     # Colisiones entre balas y enemigos
     for bullet in bullets:
@@ -168,12 +212,17 @@ while not game_over:
     for enemy in enemies:
         if player_rect.colliderect(enemy):
             game_over = True
+    
+    # Verificar si hay un obstáculo en la pantalla y el jugador ha chocado con él
+    for obstacle in obstacles:
+        if obstacle.colliderect(player_rect):
+            game_over = True # Llama a tu función de fin de juego
 
     # Aumentar la velocidad de los enemigos si ha pasado suficiente tiempo
     current_time = pygame.time.get_ticks()
     if current_time - last_speed_increase_time > enemy_speed_increase_interval:
         last_speed_increase_time = current_time
-        enemy_speed += 3  # Aumentar la velocidad de los enemigos
+        enemy_speed += 2  # Aumentar la velocidad de los enemigos
 
     # Limpiar la pantalla con el fondo
     screen.blit(background_image, (0, 0))
@@ -188,10 +237,15 @@ while not game_over:
     # Dibujar los enemigos
     for enemy in enemies:
         screen.blit(enemy_image, enemy)
+    # Dibujar obstáculos en la pantalla
+    for obstacle in obstacles:
+        screen.blit(obstacle_image, obstacle)    
 
     # Dibujar los items
     for item in items:
         screen.blit(item_image, item)
+    for item in items2:
+        screen.blit(item_image2, item)  # Asegurarse de que el item "Redbull" se dibuja
 
     # Mostrar el tiempo transcurrido
     elapsed_time = (pygame.time.get_ticks() - start_time) // 1000
@@ -207,7 +261,7 @@ while not game_over:
     pygame.display.flip()
 
     # Establecer límite de FPS
-    clock.tick(30)
+    clock.tick(60)
 
 # Ventana de juego terminado
 font_game_over = pygame.font.Font(None, 48)
