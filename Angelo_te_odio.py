@@ -1,19 +1,28 @@
 import pygame
+from pygame import mixer
 import sys
 import random
-
+import os
 # Función para reiniciar el juego
 def reset_game():
-    global hits, player_rect, bullets, enemies, items, start_time, game_over, enemy_speed, last_speed_increase_time
+    global hits, player_rect, bullets, enemies, items, start_time, game_over, enemy_speed, last_speed_increase_time, bullet_speed, bullet_rect
     hits = 0
     player_rect.topleft = (width // 2 - player_rect.width // 2, height - player_rect.height - 10)
     bullets.clear()
     enemies.clear()
     items.clear()
+    items2.clear()
+    obstacles.clear()
+    bullet_speed = 5
+    bullet_rect.width, bullet_rect.height = 50, 50
+
     start_time = pygame.time.get_ticks()
     last_speed_increase_time = start_time
     enemy_speed = 5
     game_over = False
+
+def play_random_sound():
+    random.choice(sounds).play()
 
 # Función para aumentar el tamaño de los disparos
 def increase_bullet_size():
@@ -24,6 +33,39 @@ def increase_bullet_size():
 def increase_bullet_speed():
     global bullet_speed
     bullet_speed += 2  # Incrementa la velocidad de las balas
+
+def start_screen():
+    # Definir el botón de inicio
+    start_button = pygame.Rect(100, 100, 200, 50)  # Cambia las coordenadas y el tamaño según tus necesidades
+    button_color = (0, 200, 0)  # Color verde para el botón
+    hover_color = (75, 225, 75)  # Color más claro cuando el mouse está sobre el botón
+    current_color = button_color
+
+    # Definir el título
+    font = pygame.font.Font(None, 74)  # Cambia el tamaño de la fuente según tus necesidades
+    title = font.render('Sexo 2?', True, (255, 255, 255))  # Cambia 'Mi Juego' por el título de tu juego
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if start_button.collidepoint(event.pos):
+                    return
+
+        # Cambiar el color del botón cuando el mouse está sobre él
+        if start_button.collidepoint(pygame.mouse.get_pos()):
+            current_color = hover_color
+        else:
+            current_color = button_color
+
+        # Llenar la pantalla y dibujar el título y el botón de inicio
+        screen.fill((0, 0, 0))  # Cambia el color de fondo si lo deseas
+        screen.blit(title, (100, 50))  # Cambia las coordenadas según tus necesidades
+        pygame.draw.rect(screen, current_color, start_button)
+
+        pygame.display.flip()
 
 # Función para generar enemigos
 def generate_enemies():
@@ -51,7 +93,18 @@ def generate_obstacles():
 
 
 # Inicializar Pygame
+  
 pygame.init()
+mixer.init()
+
+screen = pygame.display.set_mode((700, 775))  # Cambia el tamaño si lo deseas
+
+# Llamar a la pantalla de inicio después de inicializar Pygame
+start_screen()
+sounds = [pygame.mixer.Sound(os.path.join('sonidos', sound)) for sound in os.listdir('sonidos') if sound.endswith('.mp3')]
+# Cargar y reproducir la música de fondo
+mixer.music.load('music/musica.mp3')
+mixer.music.play(-1)
 
 # Configuración de la pantalla
 width, height = 700, 775
@@ -70,11 +123,11 @@ enemy_image = pygame.image.load("imgs/Angelo.png")
 enemy_image = pygame.transform.scale(enemy_image, (60, 60))
 
 item_image = pygame.image.load("imgs/yasuo.png")
-item_image = pygame.transform.scale(item_image, (40, 40))
+item_image = pygame.transform.scale(item_image, (60, 60))
 item_rect = item_image.get_rect()
 
 item_image2 = pygame.image.load("imgs/redbull.png")
-item_image2 = pygame.transform.scale(item_image2, (40, 40))
+item_image2 = pygame.transform.scale(item_image2, (60, 60))
 item_rect2 = item_image.get_rect()
 
 background_image = pygame.image.load("imgs/atacama2.jpg")
@@ -206,6 +259,7 @@ while not game_over:
             if enemy.colliderect(bullet['rect']):
                 bullets.remove(bullet)
                 enemies.remove(enemy)
+                play_random_sound()
                 hits += 1  # Incrementar contador de golpes
 
     # Colisiones entre jugador y enemigos
@@ -262,16 +316,32 @@ while not game_over:
 
     # Establecer límite de FPS
     clock.tick(60)
+    if game_over:
+
+    # Actualizar la pantalla
+        pygame.display.flip()
+    
+        # Esperar respuesta del jugador
+        while game_over:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w:
+                        game_over = False
+                        reset_game()
+                        break
 
 # Ventana de juego terminado
 font_game_over = pygame.font.Font(None, 48)
-text_game_over = font_game_over.render("¡Perdiste!", True, (255, 0, 0))
+text_game_over = font_game_over.render("¡Cagaste!", True, (255, 0, 0))
 text_game_over_rect = text_game_over.get_rect(center=(width // 2, height // 2))
 screen.blit(text_game_over, text_game_over_rect)
 
 # Preguntar al jugador si quiere jugar de nuevo
 font_again = pygame.font.Font(None, 36)
-text_again = font_again.render("¿Quieres jugar de nuevo? Presiona 'Again'", True, (255, 255, 255))
+text_again = font_again.render("Para salir Presiona 'A'", True, (255, 255, 255))
 text_again_rect = text_again.get_rect(center=(width // 2, height // 2 + 50))
 screen.blit(text_again, text_again_rect)
 
@@ -281,6 +351,10 @@ pygame.display.flip()
 # Esperar respuesta del jugador
 while game_over:
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
+            if event.key == pygame.K_w:
+                game_over = False
                 reset_game()
