@@ -3,6 +3,10 @@ from pygame import mixer
 import sys
 import random
 import os
+
+
+
+
 # Función para reiniciar el juego
 def reset_game():
     global hits, player_rect, bullets, enemies, items, start_time, game_over, enemy_speed, last_speed_increase_time, bullet_speed, bullet_rect
@@ -24,6 +28,8 @@ def reset_game():
 def play_random_sound():
     random.choice(sounds).play()
 
+    
+
 # Función para aumentar el tamaño de los disparos
 def increase_bullet_size():
     global bullet_image, bullet_rect, bullet_speed
@@ -35,16 +41,29 @@ def increase_bullet_speed():
     bullet_speed += 2  # Incrementa la velocidad de las balas
 
 def start_screen():
+    width, height = 700, 775
+    screen = pygame.display.set_mode((width, height))
+    pygame.display.set_caption("jueguito hecho por andres")
+    icono= pygame.image.load("imgs/messi.png")
+    pygame.display.set_icon(icono)
+    
+    # Cargar las imágenes del botón
+    button_image = pygame.image.load("imgs/pene.png")
+    button_image = pygame.transform.scale(button_image, (200, 200))  # Cambia el tamaño según tus necesidades
+    hover_image = pygame.image.load("imgs/pene.png")  # Cambia esto por la ruta a tu imagen de hover
+    hover_image = pygame.transform.scale(hover_image, (200, 200))  # Cambia el tamaño según tus necesidades
+
     # Definir el botón de inicio
-    start_button = pygame.Rect(100, 100, 200, 50)  # Cambia las coordenadas y el tamaño según tus necesidades
-    button_color = (0, 200, 0)  # Color verde para el botón
-    hover_color = (75, 225, 75)  # Color más claro cuando el mouse está sobre el botón
-    current_color = button_color
+    start_button = button_image.get_rect()
+    start_button.topleft = (100, 200)  # Cambia las coordenadas según tus necesidades
 
     # Definir el título
     font = pygame.font.Font(None, 74)  # Cambia el tamaño de la fuente según tus necesidades
-    title = font.render('Sexo 2?', True, (255, 255, 255))  # Cambia 'Mi Juego' por el título de tu juego
-
+    title = font.render('Bienvenido al ange-juego', True, (255, 10, 180))  # Cambia 'Mi Juego' por el título de tu juego
+    
+    font2 = pygame.font.Font(None, 30)  # Cambia el tamaño de la fuente según tus necesidades
+    text = font2.render('Presiona el botón para comenzar', True, (255, 255, 255))  # Cambia 'Mi Juego' por el título de tu juego
+    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -54,19 +73,19 @@ def start_screen():
                 if start_button.collidepoint(event.pos):
                     return
 
-        # Cambiar el color del botón cuando el mouse está sobre él
-        if start_button.collidepoint(pygame.mouse.get_pos()):
-            current_color = hover_color
-        else:
-            current_color = button_color
+        # Cambiar la imagen del botón cuando el mouse está sobre él
+        current_image = hover_image if start_button.collidepoint(pygame.mouse.get_pos()) else button_image
 
-        # Llenar la pantalla y dibujar el título y el botón de inicio
+        # Llenar la pantalla y dibujar el título, el texto y el botón de inicio
+        background_image = pygame.image.load("imgs/atacama2.jpg")
+        background_image = pygame.transform.scale(background_image, (700, 775))
         screen.fill((0, 0, 0))  # Cambia el color de fondo si lo deseas
-        screen.blit(title, (100, 50))  # Cambia las coordenadas según tus necesidades
-        pygame.draw.rect(screen, current_color, start_button)
+        screen.blit(background_image, (0, 0))
+        screen.blit(title, (70, 50))  # Cambia las coordenadas según tus necesidades
+        screen.blit(text, (75, 130))  # Cambia las coordenadas según tus necesidades
+        screen.blit(current_image, start_button.topleft)
 
         pygame.display.flip()
-
 # Función para generar enemigos
 def generate_enemies():
     if random.randint(0, 100) < 1:
@@ -103,13 +122,15 @@ screen = pygame.display.set_mode((700, 775))  # Cambia el tamaño si lo deseas
 start_screen()
 sounds = [pygame.mixer.Sound(os.path.join('sonidos', sound)) for sound in os.listdir('sonidos') if sound.endswith('.mp3')]
 # Cargar y reproducir la música de fondo
-mixer.music.load('music/musica.mp3')
+mixer.music.load('music/musica2.mp3')
 mixer.music.play(-1)
 
 # Configuración de la pantalla
 width, height = 700, 775
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("ojala el angelo muera en un accidente de tráfico")
+pygame.display.set_caption("jueguito hecho por andres")
+icono= pygame.image.load("imgs/amonus.png")
+pygame.display.set_icon(icono)
 
 # Cargar imágenes y escalarlas
 player_image = pygame.image.load("imgs/messi.png")
@@ -137,6 +158,9 @@ background_image = pygame.transform.scale(background_image, (width, height))
 player_rect = player_image.get_rect()
 player_rect.topleft = (width // 2 - player_rect.width // 2, height - player_rect.height - 10)
 player_speed = 15
+
+# Inicializa la variable de pausa
+paused = False
 
 # Cargar la imagen del obstáculo
 obstacle_image = pygame.image.load('imgs/amonus.png')
@@ -166,7 +190,7 @@ items2 = []
 clock = pygame.time.Clock()
 
 # Mantener registro de teclas presionadas
-keys_pressed = {'left': False, 'right': False}
+keys_pressed = {'left': False, 'right': False, 'up': False, 'down': False}
 
 # Tiempo transcurrido
 start_time = pygame.time.get_ticks()
@@ -178,6 +202,26 @@ hits = 0
 
 # Variable de control de juego
 game_over = False
+
+# Crear un objeto Font
+font = pygame.font.Font(None, 36)  # Cambia el tamaño de la fuente según tus necesidades
+
+# Crear las superficies de texto
+game_over_text = font.render("¡Cagaste!", True, (255, 0, 0))
+text_game_over_text = game_over_text.get_rect(center=(width // 2, height // 2))  # Cambia el color del texto si lo deseas
+font_again = pygame.font.Font(None, 36)
+text_again = font_again.render("Para volver a comenzar Presiona 'w'", True, (255, 255, 255))
+text_again_rect = text_again.get_rect(center=(width // 2, height // 2 + 50))  # Cambia el color del texto si lo deseas
+
+font_pause = pygame.font.Font(None, 48)
+text_pause = font_pause.render("Juego Pausado", True, (0, 0, 0))
+text_pause_rect = text_pause.get_rect(center=(width // 2, height // 2))
+
+for event in pygame.event.get():
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:  # Ahora se usa la tecla Escape para pausar el juego
+            paused = not paused  # Cambia el estado de pausa
+
 
 # Bucle principal del juego
 while not game_over:
@@ -192,6 +236,12 @@ while not game_over:
                 keys_pressed['left'] = True
             elif event.key == pygame.K_RIGHT:
                 keys_pressed['right'] = True
+            elif event.key == pygame.K_UP:
+                keys_pressed['up'] = True
+            elif event.key == pygame.K_DOWN:
+                keys_pressed['down'] = True
+            elif event.key == pygame.K_ESCAPE:  # Ahora se usa la tecla Escape para pausar el juego
+                paused = not paused  # Cambia el estado de pausa    
             elif event.key == pygame.K_SPACE:
                 bullet_rect = bullet_image.get_rect()
                 bullet = {
@@ -217,17 +267,30 @@ while not game_over:
                         increase_bullet_speed()
                         items2.remove(item_rect2)
 
+
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
                 keys_pressed['left'] = False
             elif event.key == pygame.K_RIGHT:
                 keys_pressed['right'] = False
+            elif event.key == pygame.K_UP:
+                keys_pressed['up'] = False
+            elif event.key == pygame.K_DOWN:
+                keys_pressed['down'] = False
+    if paused:
+        screen.blit(text_pause, text_pause_rect)
+        pygame.display.flip()
+        continue
 
     # Actualizar posición del jugador
     if keys_pressed['left'] and player_rect.left > 0:
         player_rect.x -= player_speed
     if keys_pressed['right'] and player_rect.right < width:
         player_rect.x += player_speed
+    if keys_pressed['up'] and player_rect.top > 0:
+        player_rect.y -= player_speed
+    if keys_pressed['down'] and player_rect.bottom < height:
+        player_rect.y += player_speed
 
     # Actualizar posición de las balas
     for bullet in bullets:
@@ -261,6 +324,8 @@ while not game_over:
                 enemies.remove(enemy)
                 play_random_sound()
                 hits += 1  # Incrementar contador de golpes
+    
+    # Actualizar y dibujar explosiones
 
     # Colisiones entre jugador y enemigos
     for enemy in enemies:
@@ -318,12 +383,20 @@ while not game_over:
     clock.tick(60)
     if game_over:
 
-    # Actualizar la pantalla
+        # Dibujar las superficies de texto en la pantalla
+        screen.blit(game_over_text, text_game_over_text)  # Cambia las coordenadas según tus necesidades
+        screen.blit(text_again, text_again_rect)  # Cambia las coordenadas según tus necesidades
+    
+        # Actualizar la pantalla
         pygame.display.flip()
     
-        # Esperar respuesta del jugador
+        # Esperar a que el jugador presione 'w' para reiniciar el juego
         while game_over:
             for event in pygame.event.get():
+                font_game_over = pygame.font.Font(None, 48)
+                text_game_over = font_game_over.render("¡Cagaste!", True, (255, 0, 0))
+                text_game_over_rect = text_game_over.get_rect(center=(width // 2, height // 2))
+                screen.blit(text_game_over, text_game_over_rect)
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
@@ -339,11 +412,6 @@ text_game_over = font_game_over.render("¡Cagaste!", True, (255, 0, 0))
 text_game_over_rect = text_game_over.get_rect(center=(width // 2, height // 2))
 screen.blit(text_game_over, text_game_over_rect)
 
-# Preguntar al jugador si quiere jugar de nuevo
-font_again = pygame.font.Font(None, 36)
-text_again = font_again.render("Para salir Presiona 'A'", True, (255, 255, 255))
-text_again_rect = text_again.get_rect(center=(width // 2, height // 2 + 50))
-screen.blit(text_again, text_again_rect)
 
 # Actualizar la pantalla
 pygame.display.flip()
